@@ -1,58 +1,71 @@
 package com.georgeayad.vertigoapp.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+import androidx.compose.runtime.CompositionLocalProvider
 
 @Composable
-fun VertigoAppTheme(
+fun VertigoTheme(
+    lightColors: ColorScheme= LightColors,
+    darkColors: ColorScheme= DarkColors,
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+    val colorScheme = if (darkTheme) darkColors else lightColors
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val windowSizeClass = rememberWindowSizeClass()
+
+    val orientation = when {
+        windowSizeClass.width.size > windowSizeClass.height.size -> Orientation.Landscape
+        else -> Orientation.Portrait
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
+    val sizeThatMatters = when (orientation) {
+        Orientation.Portrait -> windowSizeClass.width
+        else -> windowSizeClass.height
+    }
+
+    val dimensions = when (sizeThatMatters) {
+        is WindowSize.Small -> smallDimensions
+        is WindowSize.Compact -> compactDimensions
+        is WindowSize.Medium -> mediumDimensions
+        else -> largeDimensions
+    }
+
+    val typography = generateTypography(sizeThatMatters)
+
+    val appShapes = AppShapes(
+        tiny = RoundedCornerShape(dimensions.extraSmall / 2),
+        small = RoundedCornerShape(dimensions.small),
+        smallMedium = RoundedCornerShape(dimensions.smallMedium),
+        medium = RoundedCornerShape(dimensions.medium),
+        mediumLarge = RoundedCornerShape(dimensions.mediumLarge),
+        large = RoundedCornerShape(dimensions.large),
+        extraLarge = RoundedCornerShape(dimensions.extraLarge),
+        pill = RoundedCornerShape(percent = 50),
+        topRounded = RoundedCornerShape(
+            topStart = dimensions.smallMedium,
+            topEnd = dimensions.smallMedium
+        ),
+        bottomRounded = RoundedCornerShape(
+            bottomStart = dimensions.smallMedium,
+            bottomEnd = dimensions.smallMedium
+        )
     )
+
+    ProvideAppUtils(dimensions = dimensions, orientation = orientation) {
+        CompositionLocalProvider(
+            LocalAppShapes provides appShapes,
+            LocalWindowSizeClass provides windowSizeClass
+        ) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = typography,
+                content = content
+            )
+        }
+    }
 }

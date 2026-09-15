@@ -65,10 +65,10 @@ fun ProUpgradeCard(modifier: Modifier = Modifier) {
 Use our custom theme wrapper to ensure that the dark cinematic colors and typography scaling are applied correctly in the Android Studio preview pane.
 
 ```kotlin
-@Preview(showBackground = true)
+@Previews
 @Composable
 fun ProUpgradeCardPreview() {
-    VertigoTheme {
+    PreviewContainer {
         ProUpgradeCard()
     }
 }
